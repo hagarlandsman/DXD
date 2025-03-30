@@ -1,9 +1,5 @@
-#ifndef __X742_DECODE_ROUTINES_H
-#define __X742_DECODE_ROUTINES_H
+#include "CAENDigitizer.h"
 
-#include "CAENDigitizerType.h"
-#include <stdint.h>
-//#include <CAENDigitizer.h>
 #define EVENT_HEADER_SIZE		0x10
 #define X742_MAX_GROUPS			0x04
 #define MAX_X742_CHANNEL_SIZE 	0x09
@@ -42,17 +38,3 @@ int32_t GetEventPtr(char *buffer, uint32_t buffsize, int32_t numEvent, char **Ev
 * 				 : return  0 = Success; 
 ******************************************************************************/
 int32_t X742_DecodeEvent(char *evtPtr, void **Evt);
-
-class XeEvent: public  CAEN_DGTZ_X742_EVENT_t{
- public:
-  float Tstep;
-  int eventT;
-  int groupT;
-  long int  T0;
-  long int groupTtag[4];
-  int eventNumber;
-  uint32_t Freq;
-};
-
-
-#endif // __X742_DECODE_ROUTINES_H

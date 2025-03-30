@@ -130,8 +130,8 @@ bitset<10> param_set("0000000000");
   while(getline(SetupFile, line, '#'))
     {
 
-    cout<<line<<endl;
-      if (line.length() >= MAX_CFG_STR) { cerr << "*** Configuration file text line too long.  ***" <<line.length()<<" vs."<<MAX_CFG_STR<< endl << endl; exit(1); }
+//    cout<<line<<endl;
+      if (line.length() >= MAX_CFG_STR) { cerr << "*** Configuration file text line too long.  ***" << endl << endl; exit(1); }
       istringstream iss(line);
       string token;
       iss >> token;
@@ -397,12 +397,12 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
   double_t T_last_usec = preTime*8.5/1000;
   double_t T_first_usec = T_first*8.5/1000;
   
-  cout<<"Tfirst = "<<(T_first_usec)<<"Tlast = "<<(T_last_usec)<<" usec,   dt="<<(T_last_usec - T_first_usec)<<"usec,  n  = "<<tloop<<endl;;
+  cout<<"Tfirst = "<<(T_first_usec)<<"Tlast = "<<(T_last_usec)<<"  dt="<<(T_last_usec - T_first_usec)<<" n  = "<<tloop<<endl;;
   int nbins = 1e-6*(T_last_usec - T_first_usec)*5 ; // 2d histogram bin size is 0.2 sec
   if (nbins<5) nbins=10;
   if (nbins>200) nbins=200;
   cout<<T_last_usec-T_first_usec<<endl;
-  cout<<1e-6*(T_last_usec-T_first_usec)<<" secs"<<endl;
+  cout<<1e-6*(T_last_usec-T_first_usec)<<endl;
   
     
   cout<<" nbins= "<<nbins<<"  "<<PMTNum<<endl;
@@ -497,7 +497,7 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
 	  c = MAX_X742_CHANNEL_SIZE - 1;
 	}
 	// check data length integrity (all data vectors should be TimeSamples in length)
-	if (TimeSamples != Event->DataGroup[g].ChSize[c]) { cerr << "*** Event " << e << " PMT/TR " << ch << " data length is not " << TimeSamples << " ***" << endl << endl; break; exit(1); }
+	if (TimeSamples != Event->DataGroup[g].ChSize[c]) { cerr << "*** Event " << e << " PMT/TR " << ch << " data length is not " << TimeSamples << " ***" << endl << endl; exit(1); }
 
 	float StartIndex = (float)Event->DataGroup[g].StartIndexCell;
 	
@@ -771,8 +771,6 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
     //    cout<<" Range = "<<by<<"   v="<<vy<<endl;
   }
   
-   printf ("Skipping drawing.....\n");
-   return;
   drawObjects((TObject**) h2_ch_v, root_file_name, OutFileName+"_power_2d_a", "Overall power by channel, over time",run_time_stamp,0,0,1);
   for (int i=0; i<25; i++)  {
     Int_t lastBinY = h2_ch_v[i]->GetYaxis()->FindBin( 10*pow(ch_stdev[i],2));
