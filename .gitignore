@@ -1,5 +1,5 @@
 old/
-junk1/
+junk/
 *.o
 *.pyc
 mytools/read.py
