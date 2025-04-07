@@ -1,0 +1,6 @@
+old/
+junk1/
+*.o
+*.pyc
+mytools/read.py
+mytools/read2.py
