@@ -38,7 +38,7 @@
 
 using namespace std;
 
-const int FORMAT_VERSION = 1;  // or 1001, or 0x01 depending on your scheme
+const int FORMAT_VERSION = 2;  // or 1001, or 0x01 depending on your scheme
 
 // Fix gera's plot
 // Check and add to file saves
@@ -404,6 +404,7 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
   Start of loop on events in binary out file
 
 */
+  int printed_size = 0;
   if (1 == 1)
   {
     for (int e = 0; e < Nmax; e++)
@@ -647,8 +648,6 @@ void DigDataExt::WriteChannelToMeta(std::fstream& Out,
   int g, int c, int ch, const std::string& name,
   int pmt_ch, const std::vector<float>& waveform)
   {
-    //printf ("WF - %d %d %f %f \n",e,ch,waveform[0],waveform[1]);
-    write_tag(Out, "CH__STA");
     int channel_data_size =
     sizeof(int) +        // event number
     sizeof(long) +       // time tag
@@ -658,9 +657,15 @@ void DigDataExt::WriteChannelToMeta(std::fstream& Out,
     FIXED_STRING_LEN +   // name string
     sizeof(int) +        // PMT map value
     TimeSamples * sizeof(float);  // waveform
-    Out.write(reinterpret_cast<const char*>(&FORMAT_VERSION), sizeof(int));
+
+    //printf ("WF - %d %d %f %f \n",e,ch,waveform[0],waveform[1]);
+
+
+   // Out.write(reinterpret_cast<const char*>(&FORMAT_VERSION), sizeof(int));
+   // write_tag(Out, "CH__STA");
+
     write_tag(Out, "CH__STA");
-    Out.write((char *)&channel_data_size, sizeof(int));  // Event number
+    Out.write((char *)&channel_data_size, sizeof(int));  // channel data size
     Out.write((char *)&e, sizeof(int));  // Event number
     Out.write((char *)&TimeTag, sizeof(long));
     Out.write((char *)&Tsamp, sizeof(float));

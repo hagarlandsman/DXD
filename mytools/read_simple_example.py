@@ -1,6 +1,6 @@
 from DX2FileReader import *
 
-reader = DX2("out.DX2")
+reader = DX2("/home/hagar/Workspace/codes/DXD/example/out_with_correction.DX2")
 print("Channels:")
 print(reader.df_channels.head())
 

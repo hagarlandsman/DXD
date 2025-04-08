@@ -26,6 +26,7 @@ class DX2:
         event_data = defaultdict(lambda: {"time_tag": None, "tsamp": None, "start_index": None, "waveforms": []})
 
         with open(self.filename, "rb") as f:
+            once = 0
             while True:
                 tag = f.read(self.TAG_SIZE)
                 if not tag:
@@ -34,14 +35,18 @@ class DX2:
                 if tag == self.EVT_TAG:
                     version_bytes = f.read(self.FORMAT_VERSION_SIZE)
                     version = struct.unpack("<i", version_bytes)[0]
+                    if (once == 0):
+                        print ("Format Version = ",version)
+                        once = 1
 
                 elif tag == self.CH_TAG:
-                    version_bytes = f.read(self.FORMAT_VERSION_SIZE)
-                    version = struct.unpack("<i", version_bytes)[0]
+                    if (version==1):   # This part weas removed at version 2, redundant
+                        version_bytes = f.read(self.FORMAT_VERSION_SIZE)
+                        version = struct.unpack("<i", version_bytes)[0]
+                        tag2 = f.read(self.TAG_SIZE)
+                        if tag2 != self.CH_TAG:
+                            raise ValueError(f"Expected CH__STA, got {tag2}")
 
-                    tag2 = f.read(self.TAG_SIZE)
-                    if tag2 != self.CH_TAG:
-                        raise ValueError(f"Expected CH__STA, got {tag2}")
 
                     size_bytes = f.read(4)
                     channel_data_size = struct.unpack("<i", size_bytes)[0]
