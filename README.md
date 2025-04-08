@@ -75,11 +75,11 @@ Use this to parse `.DX2` waveform files into a structured format with Pandas.
 - Provides: `df_events`, `df_channels`
 
 keys within df_channels:	 
-- 'pmt_ch'
+- 'pmt_ch'  = digitizer channel. Used to calculate c,g
 - 'name'
-- 'logic_ch'
-- 'phys_ch'
-- 'group'
+- 'logic_ch' = ch
+- 'phys_ch'   = c (channel withing the group)
+- 'group'   = g
 
 ```python
 Channels:
@@ -100,7 +100,7 @@ keys within df_events:
 - 'time_tag'
 - 'tsamp'
 -  'start_index',
--   'waveforms'
+-   'waveforms' - ordered by "ch"  - the serial number of the pmt 
 
   ```python
 
