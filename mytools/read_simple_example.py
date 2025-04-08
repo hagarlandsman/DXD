@@ -36,6 +36,10 @@ if not event_row.empty:
 else:
     print("Event 10 not found.")
 
-#reader.plot_event_waveforms(0, separate_subplots=False)
-#reader.draw_summary()
+
+
+
+# Plot an event using DX2 library:
+reader.plot_event_waveforms(0, separate_subplots=False)
+reader.draw_summary()
 
