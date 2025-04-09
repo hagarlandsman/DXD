@@ -13,14 +13,12 @@
 
 #include "algorithm"
 #include <cstdlib>
-#include "TMath.h"
 #include "DigDataExt.h"
 #include <iomanip>
 #include <ctime>
 
 #include <cmath>
 #include <string>
-#include "DirexenoCorrection.h"
 #include <cstring> // for strtok
 // #include <iomanip> // for std::quoted
 #include <sstream>
@@ -286,11 +284,9 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
 {
   string short_name = out_file_name.substr(out_file_name.find_last_of("/\\") + 1, out_file_name.find_last_of("."));
   std::cout << "----" << short_name << "----" << endl;
-  TString root_file_name(OutFileName);
-  root_file_name = root_file_name + ".root";
   // load setup parameters
   for (int i = 0; i < 30; i++)
-    PMTTitle.push_back(Form("Channel %d", i));
+    PMTTitle.push_back("Channel "+std::to_string(i));
  // cout << PMTTitle.size() << endl;
   cout << "Starting DigDataExt class." << endl;
   ParseSetupFile(SetupFileName);
@@ -461,7 +457,6 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
     nbins = 200;
 
   tloop = -1;
-  TString wf_title[5] = {"sample WF A", "sample WF B", "sample WF C", "sample WF D", "sample WF E"};
   printf("Nmax= %d \n", Nmax);
   ///// Main loop begins
   //long int preTime_usec = 0;

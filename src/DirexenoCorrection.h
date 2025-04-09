@@ -1,5 +1,5 @@
 #include <fstream>
-#include "TGraph.h"
+
 #include "cnpy.h"
 #ifndef DIREXENO_CORRECTION_H
 #define DIREXENO_CORRECTION_H

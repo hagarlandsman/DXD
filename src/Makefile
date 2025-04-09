@@ -1,9 +1,10 @@
-CXX=`root-config --cxx`
-CXXFLAGS=`root-config --cflags`
-LDFLAGS=`root-config --ldflags`
+#CXX=`root-config --cxx`
+#CXXFLAGS=`root-config --cflags`
+#LDFLAGS=`root-config --ldflags`
+#LDLIBS=`root-config --glibs`  -lSpectrum -lz
+#ROOTLIBS='-lRooFit -lHtml -lMinuit -lRooFitCore -lRooStats -lHistFactory'
 
-LDLIBS=`root-config --glibs`  -lSpectrum -lz
-ROOTLIBS='-lRooFit -lHtml -lMinuit -lRooFitCore -lRooStats -lHistFactory'
+LDLIBS = -lm -lpthread -lz
 
 CC = g++
 CFLAGS  = -g -Wall -DLINUX -I. -I./include/. -I../include/.
@@ -81,6 +82,6 @@ clean:
 
 
 
-DxDataExtractor: ./DigDataExt.o   ./DxDataExtractor.o ./DirexenoCorrection.o ./cnpy.o  ./X742CorrectionRoutines.o  ./X742DecodeRoutines.o
-	$(LINK) ./DigDataExt.o  ./DxDataExtractor.o ./DirexenoCorrection.o ./cnpy.o  ./X742DecodeRoutines.o ./X742CorrectionRoutines.o  $(wavedump_LDADD)  $(LIBS) $(CXXFLAGS) $(DEFAULT_INCLUDES) $(LDLIBS)
+DxDataExtractor: ./DigDataExt.o   ./DxDataExtractor.o  ./cnpy.o  ./X742CorrectionRoutines.o  ./X742DecodeRoutines.o
+	$(LINK) ./DigDataExt.o  ./DxDataExtractor.o ./cnpy.o  ./X742DecodeRoutines.o ./X742CorrectionRoutines.o  $(wavedump_LDADD)  $(LIBS) $(CXXFLAGS) $(DEFAULT_INCLUDES) $(LDLIBS)
 

@@ -1,9 +1,7 @@
 
 #include "DirexenoCorrection.h"
 #include <fstream>
-#include "TCanvas.h"
-#include "TGraph.h"
-#include "TFile.h"
+
 
 // Check if caen fix is preformed.  look at WF from the processed file
 using namespace std;
