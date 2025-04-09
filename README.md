@@ -120,7 +120,24 @@ print(ev['waveforms'][0].keys())
 # dict_keys(['logic_ch', 'pmt_ch', 'name', 'group', 'group_channel', 'waveform'])
 
 print(ev['waveforms'][0]['waveform'][:10])  # Show first 10 samples
+
+# If some reason you want to load the entire file to memory:
+data.read_file_new() 
+# all events are in df_events data frame:
+keys within Events data frame:   Index(['event', 'tsamp', 'time_tag', 'start_index', 'waveforms'], dtype='object')
+df_events head:
+   event  ...                                          waveforms
+0      1  ...  [{'logic_ch': 0, 'pmt_ch': 1, 'name': 'Trigger...
+1      1  ...  [{'logic_ch': 0, 'pmt_ch': 1, 'name': 'Trigger...
+2      1  ...  [{'logic_ch': 0, 'pmt_ch': 1, 'name': 'Trigger...
+3      1  ...  [{'logic_ch': 0, 'pmt_ch': 1, 'name': 'Trigger...
+4      1  ...  [{'logic_ch': 0, 'pmt_ch': 1, 'name': 'Trigger...
+
+
+
 ```
+
+
 
 ---
 
