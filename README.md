@@ -46,11 +46,11 @@ Format Version 2 - from 8/4/2025
 | 2.3  | TimeTag             | long      | 8                             | Timestamp indicating when the data was recorded.                                                                                                                                                                            |
 | 2.4  | Tsamp               | float     | 4                             | Sampling period, representing the time interval between consecutive samples in the waveform.                                                                                                                                |
 | 2.5  | StartIndex          | float     | 4                             | Starting index of the data within the waveform.                                                                                                                                                                             |
-| 2.6  | g                   | int       | 4                             | Group number, classifying the channel into a specific group.                                                                                                                                                                |
-| 2.7  | c                   | int       | 4                             | Physical channel number, representing the physical identifier of the channel.                                                                                                                                               |
+| 2.6  | g                   | int       | 4                             | Group number,  g = PMTChMap[ch]/8; |                                                                                                                                                                |
+| 2.7  | c                   | int       | 4                             |  Channel number withing a group, c= PMTChMap[ch]%8; |                                                                                                                                              |
 | 2.8 | ch                  | int       | 4                             | Logical channel number, providing a logical identifier for the channel.                                                                                                                                                     |
 | 2.9  | name                | char[]    | FIXED_STRING_LEN=32  | Channel name written as a fixed-length string. A buffer of size `FIXED_STRING_LEN` is created, initialized to zero, and the channel name is copied into this buffer to ensure consistent size in the binary file.            |
-| 2.10  | PMTChMap[ch]        | int       | 4                             | PMT (Photomultiplier Tube) map value corresponding to the channel, providing mapping information related to the PMT configuration.                                                                                           |
+| 2.10  | PMTChMap[ch]        | int       | 4                             | Digitizer channel . This is used to calculate "g" and "c"|                                                                                         |
 | 2.11 | waveform            | float[]   | TimeSamples * sizeof(float)   | Array containing the recorded waveform samples. The number of samples (`TimeSamples`) determines the length of this array, representing the actual recorded data for the channel.                                            |
 
 
@@ -75,11 +75,11 @@ Use this to parse `.DX2` waveform files into a structured format with Pandas.
 - Provides: `df_events`, `df_channels`
 
 keys within df_channels:	 
-- 'pmt_ch'
+- 'pmt_ch'  = digitizer channel. Used to calculate c,g
 - 'name'
-- 'logic_ch'
-- 'phys_ch'
-- 'group'
+- 'logic_ch' = ch
+- 'phys_ch'   = c (channel withing the group)
+- 'group'   = g
 
 ```python
 Channels:
@@ -100,7 +100,7 @@ keys within df_events:
 - 'time_tag'
 - 'tsamp'
 -  'start_index',
--   'waveforms'
+-   'waveforms' - ordered by "ch"  - the serial number of the pmt 
 
   ```python
 
