@@ -38,7 +38,7 @@
 
 using namespace std;
 
-const int FORMAT_VERSION = 2;  // or 1001, or 0x01 depending on your scheme
+const int FORMAT_VERSION = 3;  // or 1001, or 0x01 depending on your scheme
 
 // Fix gera's plot
 // Check and add to file saves
@@ -110,6 +110,35 @@ std::vector<std::string> splitString(const std::string &input, char delimiter)
 
 // std::string base = base_name<std::string>("some/path/file.ext");
 
+int DigDataExt::write_buffer_to_file(std::ostream& OutDataFileMeta,const std::ostringstream& outbuffer,  int FORMAT_VERSION)
+{
+  int outbuffersize = static_cast<int>(outbuffer.str().size());
+  write_tag(OutDataFileMeta, "EVT_STA");
+  if (!OutDataFileMeta.good()) {
+    std::cerr << "Error writing EVT_STA tag\n";
+    return false;
+  }
+
+  OutDataFileMeta.write(reinterpret_cast<const char*>(&FORMAT_VERSION), sizeof(int));
+  if (!OutDataFileMeta.good()) {
+    std::cerr << "Error writing FORMAT_VERSION\n";
+    return false;
+  }
+
+  OutDataFileMeta.write(reinterpret_cast<const char*>(&outbuffersize), sizeof(int));
+  if (!OutDataFileMeta.good()) {
+    std::cerr << "Error writing buffer size\n";
+    return false;
+  }
+
+  OutDataFileMeta.write(outbuffer.str().data(), outbuffersize);
+  if (!OutDataFileMeta.good()) {
+    std::cerr << "Error writing buffer data\n";
+    return false;
+  }
+
+  return true;
+  }
 
 void DigDataExt::write_tag(std::ostream& fout, const char* tag) {
   char buffer[8] = {0};
@@ -364,25 +393,7 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
   NumOfEvents = NumOfEvents - 1; // dump last event (often corrupt)
   cout << "\t...File has " << int(NumOfEvents) << " events (last event was dumped)." << endl;
 
-  // open output data file
-  cout << "...Opening output data file " << OutFileName << " ." << endl;
-  fstream OutDataFile(OutFileName + ".DXD", ios::out | ios::app | ios::binary);
 
-  if (!OutDataFile)
-  {
-    cerr << "*** File opening error. ***" << endl
-         << endl;
-    exit(1);
-  }
-
-  fstream OutDataFileMeta(OutFileName + ".DX2", ios::out | ios::app | ios::binary);
-
-  if (!OutDataFileMeta)
-  {
-    cerr << "*** File opening error. ***" << endl
-         << endl;
-    exit(1);
-  }
 
 
 
@@ -404,15 +415,11 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
   Start of loop on events in binary out file
 
 */
-  int printed_size = 0;
+//Nmax = 100;
   if (1 == 1)
   {
-    for (int e = 0; e < Nmax; e++)
+    for (int e = 0; e < Nmax; e++)  // First loop to check times
     {
-
-      write_tag(OutDataFileMeta, "EVT_STA");
-      OutDataFileMeta.write((char *)&FORMAT_VERSION, sizeof(int));  // Event number
-
       EventPtr = NULL;
       GetEventPtr(DataBuffer, DataBufferSize, e, &EventPtr);
       Event = NULL;
@@ -458,11 +465,50 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
   printf("Nmax= %d \n", Nmax);
   ///// Main loop begins
   //long int preTime_usec = 0;
-  int nch=0;
   int nev=0;
+
+  int bad_events = 0;
+  int good_events = 0;
+  int wrote_ch = 0;
+  std::ostringstream outbuffer;
+
+  // open output data file
+  cout << "...Opening output data file " << OutFileName << " ." << endl;
+  fstream OutDataFile(OutFileName + ".DXD", ios::out | ios::app | ios::binary);
+
+  if (!OutDataFile)
+  {
+    cerr << "*** File opening error. ***" << endl<< endl;
+    exit(1);
+  }
+ full_dx2_filename = OutFileName + ".V" + std::to_string(FORMAT_VERSION) + ".DX2";
+
+  fstream OutDataFileMeta(full_dx2_filename, ios::out | ios::app | ios::binary);
+
+  if (!OutDataFileMeta)
+  {
+    cerr << "*** File opening error. ***" << endl<<endl;
+    exit(1);
+  }
+
   for (int e = 0; e < Nmax; e++)
   {
+    int outbuffersize = outbuffer.str().size();
+    if (outbuffersize>0) {
+      if (wrote_ch==PMTNum) {
+          write_buffer_to_file(OutDataFileMeta, outbuffer, FORMAT_VERSION);
+          //printf(" Buffer size is %d, ready to write  %d channels \n",outbuffer.str().size(),wrote_ch);
+          good_events++;
+      }
+      else {
+        bad_events ++ ;
+        printf(" <--- Problem with event %d: Buffer size is %d, Processed %d channels from %d\n",e,outbuffer.str().size(),wrote_ch,PMTNum);
+      }
 
+    }
+    outbuffer.str("");       // Clear contents
+    outbuffer.clear();       // Clear any error flags (like eofbit)
+    wrote_ch = 0;
     nev++;
     EventPtr = NULL;
 
@@ -533,7 +579,8 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
 
 
       // Prepare channel name for binary output as fixed length string.
-      std::string& str = PMTTitle[ch];
+      std::string& str = PMTTitle[ch];   // MOSHE here
+      // cout<< "Should i take "<<PMTTitle[ch]<<" or "<<PMTNameMap[ch]<<endl;
       char buffer[FIXED_STRING_LEN] = {0};
       // Copy up to 31 characters + null-terminator (optional)
       std::strncpy(buffer, str.c_str(), FIXED_STRING_LEN - 1);
@@ -563,17 +610,15 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
 
       if (!OutDataFile.good())
       {
-        cerr << "*** File writing error. ***" << endl
-             << endl;
+        cerr << "*** File writing error. ***" << endl << endl;
         exit(1);
       }
 
       std::vector<float> wf(Event->DataGroup[g].DataChannel[c],
         Event->DataGroup[g].DataChannel[c] + TimeSamples);
-
-      WriteChannelToMeta(OutDataFileMeta, e, TimeTag, Tsamp, StartIndex, g, c, ch,  PMTTitle[ch], PMTChMap[ch], wf);
-
-
+//      WriteChannelToMeta(OutDataFileMeta, e, TimeTag, Tsamp, StartIndex, g, c, ch,  PMTTitle[ch], PMTChMap[ch], wf);
+      WriteChannelToMeta(outbuffer , e, TimeTag, Tsamp, StartIndex, g, c, ch,  PMTNameMap[ch], PMTChMap[ch], wf);
+      wrote_ch++;
       if (!OutDataFileMeta.good())
       {
         cerr << "*** Meta File writing error. ***" << endl
@@ -625,7 +670,10 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
     cout.flush();
 
   } // End of Loop on e Nevents
-  cout << "done..."<<endl; // end the progress bar's last line update
+  write_buffer_to_file(OutDataFileMeta, outbuffer, FORMAT_VERSION);
+  good_events++;
+
+printf ("Done!\n=====================================\nLooped on %d events. \n\t %d written to disk. \n\t %d were not .\n ",Nmax,good_events,bad_events);
 
   // free correction tables memory
   for (int i = 0; i < MAX_X742_GROUP_SIZE; i++)
@@ -643,7 +691,7 @@ DigDataExt::DigDataExt(const string CorrFilesPath, const string setup_file_name,
 }
 
 
-void DigDataExt::WriteChannelToMeta(std::fstream& Out,
+void DigDataExt::WriteChannelToMeta(std::ostream& Out,
   int e, long TimeTag, float Tsamp, float StartIndex,
   int g, int c, int ch, const std::string& name,
   int pmt_ch, const std::vector<float>& waveform)

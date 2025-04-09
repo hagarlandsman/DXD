@@ -60,11 +60,12 @@ class DigDataExt
   std::string run_time_stamp;
   std::string run_id;
   void write_tag(std::ostream& fout, const char* tag) ;
-  void WriteChannelToMeta(std::fstream& out,
+  void WriteChannelToMeta(std::ostream& out,
     int e, long TimeTag, float Tsamp, float StartIndex,
     int g, int c, int ch, const std::string& name,
     int pmt_ch, const std::vector<float>& waveform);
-
+    int write_buffer_to_file(std::ostream& OutDataFileMeta,const std::ostringstream& outbuffer,  int FORMAT_VERSION);
+    std::string full_dx2_filename;
   private:
     const std::string SetupFileName;
     const std::string DigFileName;

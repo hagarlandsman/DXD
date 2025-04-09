@@ -52,7 +52,7 @@ int main(int argc, char const *argv[])
 
         cout<<"done"<<endl;
         cout<<"Try doing:"<<endl;
-        cout<<"python ../mytools/event_viewer_gui.py "<<argv[4]<<".DX2"<<endl;
+        cout<<"python ../mytools/event_viewer_gui.py "<<dex.full_dx2_filename<<".DX2"<<endl;
     }
     else
     {

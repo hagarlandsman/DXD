@@ -1,6 +1,6 @@
 import sys
 import os
-
+import csv
 import tkinter as tk
 from tkinter import ttk, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -17,7 +17,7 @@ class EventViewerApp:
     def __init__(self, master, reader: DX2):
         self.master = master
         self.reader = reader
-        self.current_event = 0
+        self.current_event = 1
         self.use_subplots = False
         self.fig = None
 
@@ -70,24 +70,21 @@ class EventViewerApp:
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
         self.fig = plt.Figure(figsize=(12, 10), dpi=100)
-        event_row = self.reader.df_events[self.reader.df_events['event'] == self.current_event]
-        if not event_row.empty:
-            row = event_row.iloc[0]
-            info_text = (f"File: {self.reader.filename}  |  Event: {self.current_event}  |  "
-                         f"TimeTag: {row['time_tag']}  |  Tsamp: {row['tsamp']}  |  StartIndex: {row['start_index']}")
-        else:
-            info_text = f"File: {self.reader.filename}  |  Event: {self.current_event}"
+        event_row = reader.read_event(self.current_event)
+
+        info_text = (f"File: {self.reader.filename}  |  Event: {self.current_event}  |  "
+                         f"TimeTag: {event_row['time_tag']}  |  Tsamp: {event_row['tsamp']}  |  StartIndex: {event_row['start_index']}")
+
         self.fig.text(0.01, 0.98, info_text, fontsize=9, va='top')
-        event_row = self.reader.df_events[self.reader.df_events['event'] == self.current_event]
         channel_colors = plt.cm.tab20(np.linspace(0, 1, 32))
 
-        if event_row.empty:
+        if event_row=={}:
             ax = self.fig.add_subplot(111)
             ax.set_title(f"Event {self.current_event} not found")
         else:
-            waveforms = event_row.iloc[0]['waveforms']
-            tsamp = event_row.iloc[0]['tsamp']
-            start_index = event_row.iloc[0]['start_index']
+            waveforms = event_row['waveforms']
+            tsamp = event_row['tsamp']
+            start_index = event_row['start_index']
 
             if self.use_subplots:
                 nrows, ncols = 5, 6
@@ -100,10 +97,10 @@ class EventViewerApp:
                     x = [j * tsamp  for j in range(len(y))]  # in ns
 
                     color = channel_colors[logic_ch % len(channel_colors)]
-                    info = self.reader.df_channels[self.reader.df_channels['logic_ch'] == logic_ch].iloc[0]
+
                     axs[i].plot(x, y, color=color)
                     axs[i].set_xlabel("ns")
-                    axs[i].set_title(f"Ch {logic_ch}: {info['name']}", fontsize=8)
+                    axs[i].set_title(f"Ch {logic_ch}: {wf['name']}", fontsize=8)
                     axs[i].grid(True)
                 for j in range(len(waveforms), nrows * ncols):
                     axs[j].axis('off')
@@ -114,15 +111,16 @@ class EventViewerApp:
                 legend_data = []
                 for wf in waveforms:
                     logic_ch = wf['logic_ch']
+                    name = wf['name']
                     y = wf['waveform']
 #                    x = [start_index + j * tsamp for j in range(len(y))]
                     x = [j * tsamp  for j in range(len(y))]  # in ns
 
                     color = channel_colors[logic_ch % len(channel_colors)]
-                    info = self.reader.df_channels[self.reader.df_channels['logic_ch'] == logic_ch].iloc[0]
-                    label = f"Ch {logic_ch}"
+
+                    label = f"{name}"
                     ax.plot(x, y, label=label, color=color)
-                    legend_data.append((logic_ch, info['name'], info['pmt_ch'], info['phys_ch'], info['group']))
+                    legend_data.append((logic_ch, wf['name'], wf['pmt_ch'], wf['group_channel'], wf['group']))
                 ax.set_title(f"Waveforms for Event {self.current_event}")
                 ax.set_xlabel("Time [ns]")
                 ax.set_ylabel("Amplitude")
@@ -146,14 +144,19 @@ class EventViewerApp:
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
     def prev_event(self):
-        if self.current_event > 0:
+        if self.current_event > 1:
             self.current_event -= 1
-            self.plot_event()
+        else:
+            self.current_event = int(self.reader.Nevents) - 1
+        self.plot_event()
 
     def next_event(self):
-        if self.current_event < self.reader.df_events['event'].max():
+        if self.current_event < self.reader.Nevents - 1:
             self.current_event += 1
-            self.plot_event()
+        else:
+            self.current_event = 1
+
+        self.plot_event()
 
     def jump_to_event(self):
         try:
@@ -173,10 +176,11 @@ class EventViewerApp:
     def save_csv_fancy(self):
         filename = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
         if filename:
-            event_row = self.reader.df_events[self.reader.df_events['event'] == self.current_event]
-            if not event_row.empty:
+            event_row = reader.read_event(self.current_event)
+
+            if event_row!={}:
                 rows = []
-                for wf in event_row.iloc[0]['waveforms']:
+                for wf in event_row['waveforms']:
                     logic_ch = wf['logic_ch']
                     for i, val in enumerate(wf['waveform']):
                         rows.append({"logic_ch": logic_ch, "sample": i, "value": val})
@@ -193,16 +197,17 @@ class EventViewerApp:
     def save_csv(self):
         base = self.reader.filename.rsplit(".", 1)[0]
         filename = f"{base}_event{self.current_event:04d}.csv"
-        event_row = self.reader.df_events[self.reader.df_events['event'] == self.current_event]
-        if not event_row.empty:
-            rows = []
-            for wf in event_row.iloc[0]['waveforms']:
-                logic_ch = wf['logic_ch']
-                for i, val in enumerate(wf['waveform']):
-                    rows.append({"logic_ch": logic_ch, "sample": i, "value": val})
-            df = pd.DataFrame(rows)
-            df.to_csv(filename, index=False)
-            print(f"Saved to {filename}")
+        event_row = reader.read_event(self.current_event)
+        channel_names = ['ch'+str(entry['pmt_ch'])+" ("+entry['name']+")" for entry in event_row['waveforms']]
+        waveform_lists = [entry['waveform'] for entry in event_row['waveforms']]
+        rows = zip(*waveform_lists)
+        with open(filename, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(channel_names)  # header row
+            writer.writerows(rows)          # waveform rows
+
+
+        print(f"Saved to {filename}")
 
     def save_png(self):
         base = self.reader.filename.rsplit(".", 1)[0]
