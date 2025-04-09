@@ -24,6 +24,50 @@ def search_binary_file(file_path, byte_sequence):
             offset = mm.find(byte_sequence, offset)
             print(f"Match found at offset: {offset}")
 
+def plot_event_waveforms_frame(event_row, title, separate_subplots=False):
+
+
+        waveforms = event_row['waveforms']
+        tsamp = event_row['tsamp']
+        start_index = event_row['start_index']
+
+        channel_colors = plt.cm.tab20(np.linspace(0, 1, 32))  # assign a unique color to each channel
+
+        if separate_subplots:
+            n = len(waveforms)
+            nrows, ncols = 5, 6
+            fig, axs = plt.subplots(nrows, ncols, figsize=(18, 12), sharex=True)
+            axs = axs.flatten()
+            for i, wf in enumerate(waveforms):
+                logic_ch = wf['logic_ch']
+                y = wf['waveform']
+                x = [start_index + i * tsamp for i in range(len(y))]
+                color = channel_colors[logic_ch % len(channel_colors)]
+
+                name = wf['name']
+                axs[i].plot(x, y, color=color)
+                axs[i].set_title(f"Ch {logic_ch}: {name}", fontsize=9)
+                axs[i].grid(True)
+            for j in range(len(waveforms), nrows * ncols):
+                axs[j].axis('off')
+            plt.tight_layout()
+            plt.show()
+        else:
+            plt.figure(figsize=(12, 6))
+            for wf in waveforms:
+                logic_ch = wf['logic_ch']
+                y = wf['waveform']
+                x = [start_index + i * tsamp for i in range(len(y))]
+                color = channel_colors[logic_ch % len(channel_colors)]
+                plt.plot(x, y, label=f"ch {logic_ch}", color=color)
+
+            plt.title(title)
+            plt.xlabel("Time")
+            plt.ylabel("Amplitude")
+            plt.legend()
+            plt.grid(True)
+            plt.tight_layout()
+            plt.show()
 
 class DX2:
     TAG_SIZE = 8
@@ -192,6 +236,10 @@ class DX2:
         print(self.df_events.head())
 
     def plot_event_waveforms(self, event_number, separate_subplots=False):
+        event_row=self.read_event(event_number)
+        plot_event_waveforms_frame(event_row, "Event "+str(event_number), separate_subplots=separate_subplots)
+
+    def bla(self,event_number, seperate_subplots=False):
         event_row = self.df_events[self.df_events['event'] == event_number]
         if event_row.empty:
             print(f"Event {event_number} not found.")
@@ -214,7 +262,7 @@ class DX2:
                 x = [start_index + i * tsamp for i in range(len(y))]
                 color = channel_colors[logic_ch % len(channel_colors)]
                 axs[i].plot(x, y, color=color)
-                axs[i].set_title(f"Ch {logic_ch}: {info['name']}", fontsize=9)
+                axs[i].set_title(f"Ch {logic_ch}: {wf['name']}", fontsize=9)
                 axs[i].grid(True)
             for j in range(len(waveforms), nrows * ncols):
                 axs[j].axis('off')
@@ -237,50 +285,6 @@ class DX2:
             plt.tight_layout()
             plt.show()
 
-    def plot_event_waveforms_frame(self, event_row, title, separate_subplots=False):
-
-
-        waveforms = event_row['waveforms']
-        tsamp = event_row['tsamp']
-        start_index = event_row['start_index']
-
-        channel_colors = plt.cm.tab20(np.linspace(0, 1, 32))  # assign a unique color to each channel
-
-        if separate_subplots:
-            n = len(waveforms)
-            nrows, ncols = 5, 6
-            fig, axs = plt.subplots(nrows, ncols, figsize=(18, 12), sharex=True)
-            axs = axs.flatten()
-            for i, wf in enumerate(waveforms):
-                logic_ch = wf['logic_ch']
-                y = wf['waveform']
-                x = [start_index + i * tsamp for i in range(len(y))]
-                color = channel_colors[logic_ch % len(channel_colors)]
-
-                name = wf['name']
-                axs[i].plot(x, y, color=color)
-                axs[i].set_title(f"Ch {logic_ch}: {name}", fontsize=9)
-                axs[i].grid(True)
-            for j in range(len(waveforms), nrows * ncols):
-                axs[j].axis('off')
-            plt.tight_layout()
-            plt.show()
-        else:
-            plt.figure(figsize=(12, 6))
-            for wf in waveforms:
-                logic_ch = wf['logic_ch']
-                y = wf['waveform']
-                x = [start_index + i * tsamp for i in range(len(y))]
-                color = channel_colors[logic_ch % len(channel_colors)]
-                plt.plot(x, y, label=f"ch {logic_ch}", color=color)
-
-            plt.title(title)
-            plt.xlabel("Time")
-            plt.ylabel("Amplitude")
-            plt.legend()
-            plt.grid(True)
-            plt.tight_layout()
-            plt.show()
 
     def draw_summary(self):
         max_values = defaultdict(list)
