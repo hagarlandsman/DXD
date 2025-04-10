@@ -9,11 +9,14 @@ A collection of tools for handling waveform data from V1742 digitizers:
 
 ---
 
+
 ## 🛠️ C++ Code: DX2 Binary Writer
 
 ### Location: `src/*.cpp, *.c, *.h`
 
 This code takes digitized waveform data and writes it to a custom `.DX2` binary format. Also supports writing the obsolete `.DXD` format (unchanged structure).
+
+The online code reading the data from the digitizer and producing the "out_00001.DAT" files can be found here: https://github.com/hagarlandsman/direxdaq_code/tree/main/xedaq 
 
 ### 🔧 Compile:
 
