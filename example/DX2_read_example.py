@@ -1,7 +1,7 @@
 # Example1.py
 
 import DX2FileReader as DX2
-data = DX2.DX2("out_2.5GHz.V3.DX2")
+data = DX2.DX2("out_0001.V3.DX2")
 
 print (f"Got {data.Nevents}")
 Ntot = int(data.Nevents)
